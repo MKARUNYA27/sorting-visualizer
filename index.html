@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorting Visualizer | Karunya</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3436;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #636e72;
+            margin-bottom: 30px;
+        }
+
+        /* Controls */
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            font-weight: bold;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-bubble { background: #ff6b6b; color: white; }
+        .btn-selection { background: #4ecdc4; color: white; }
+        .btn-insertion { background: #45b7d1; color: white; }
+        .btn-reset { background: #2d3436; color: white; }
+        .btn-generate { background: #fdcb6e; color: #2d3436; }
+
+        .speed-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f5f6fa;
+            padding: 5px 15px;
+            border-radius: 8px;
+        }
+
+        input[type="range"] {
+            width: 150px;
+        }
+
+        /* Array Container */
+        .array-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            height: 400px;
+            gap: 2px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f5f6fa;
+            border-radius: 10px;
+        }
+
+        .bar {
+            background: #667eea;
+            width: 30px;
+            transition: height 0.1s ease;
+            border-radius: 5px 5px 0 0;
+        }
+
+        /* Info */
+        .info {
+            text-align: center;
+            padding: 20px;
+            background: #f5f6fa;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .complexity {
+            font-family: monospace;
+            font-size: 1.1rem;
+            margin-top: 10px;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            color: #636e72;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Sorting Algorithm Visualizer</h1>
+        <p class="subtitle">Watch how different sorting algorithms work</p>
+
+        <div class="controls">
+            <button class="btn-bubble" onclick="bubbleSort()">Bubble Sort</button>
+            <button class="btn-selection" onclick="selectionSort()">Selection Sort</button>
+            <button class="btn-insertion" onclick="insertionSort()">Insertion Sort</button>
+            <button class="btn-reset" onclick="resetArray()">Reset Array</button>
+            <button class="btn-generate" onclick="generateNewArray()">New Array</button>
+            
+            <div class="speed-control">
+                <span>Speed:</span>
+                <input type="range" id="speedRange" min="1" max="100" value="50">
+            </div>
+        </div>
+
+        <div class="array-container" id="arrayContainer"></div>
+
+        <div class="info">
+            <h3>Time Complexity</h3>
+            <div class="complexity">
+                <p>🐢 Bubble Sort: O(n²) | 🐢 Selection Sort: O(n²) | 🐢 Insertion Sort: O(n²)</p>
+                <p style="margin-top: 10px;">✅ Best for learning! More algorithms coming soon.</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Built by Karunya | Sorting Visualizer</p>
+        </footer>
+    </div>
+
+    <script>
+        let array = [];
+        let arraySize = 20;
+        let isSorting = false;
+
+        // Generate random array
+        function generateNewArray() {
+            if (isSorting) return;
+            array = [];
+            for (let i = 0; i < arraySize; i++) {
+                array.push(Math.floor(Math.random() * 300) + 20);
+            }
+            displayArray();
+        }
+
+        // Display the array as bars
+        function displayArray() {
+            const container = document.getElementById('arrayContainer');
+            container.innerHTML = '';
+            for (let i = 0; i < array.length; i++) {
+                const bar = document.createElement('div');
+                bar.classList.add('bar');
+                bar.style.height = array[i] + 'px';
+                bar.style.width = (800 / arraySize) + 'px';
+                container.appendChild(bar);
+            }
+        }
+
+        // Reset to original random array
+        function resetArray() {
+            if (isSorting) return;
+            generateNewArray();
+        }
+
+        // Get speed from slider (higher number = faster)
+        function getSpeed() {
+            const speed = document.getElementById('speedRange').value;
+            return 200 - (speed * 1.5);
+        }
+
+        // Sleep function for animation
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // Update bar colors
+        async function updateBar(index, color) {
+            const bars = document.getElementsByClassName('bar');
+            if (bars[index]) {
+                bars[index].style.backgroundColor = color;
+                await sleep(getSpeed() / 2);
+            }
+        }
+
+        // BUBBLE SORT
+        async function bubbleSort() {
+            if (isSorting) return;
+            isSorting = true;
+            
+            for (let i = 0; i < array.length - 1; i++) {
+                for (let j = 0; j < array.length - i - 1; j++) {
+                    // Highlight comparing bars
+                    await updateBar(j, '#ff6b6b');
+                    await updateBar(j + 1, '#ff6b6b');
+                    
+                    if (array[j] > array[j + 1]) {
+                        // Swap
+                        [array[j], array[j + 1]] = [array[j + 1], array[j]];
+                        displayArray();
+                    }
+                    
+                    // Reset color
+                    await updateBar(j, '#667eea');
+                    await updateBar(j + 1, '#667eea');
+                }
+                // Mark sorted bar
+                const bars = document.getElementsByClassName('bar');
+                if (bars[array.length - i - 1]) {
+                    bars[array.length - i - 1].style.backgroundColor = '#00b894';
+                }
+            }
+            // Mark first bar as sorted
+            const bars = document.getElementsByClassName('bar');
+            if (bars[0]) bars[0].style.backgroundColor = '#00b894';
+            
+            isSorting = false;
+        }
+
+        // SELECTION SORT
+        async function selectionSort() {
+            if (isSorting) return;
+            isSorting = true;
+            
+            for (let i = 0; i < array.length - 1; i++) {
+                let minIndex = i;
+                
+                for (let j = i + 1; j < array.length; j++) {
+                    await updateBar(j, '#ff6b6b');
+                    if (array[j] < array[minIndex]) {
+                        if (minIndex !== i) await updateBar(minIndex, '#667eea');
+                        minIndex = j;
+                        await updateBar(minIndex, '#fdcb6e');
+                    } else {
+                        await updateBar(j, '#667eea');
+                    }
+                }
+                
+                if (minIndex !== i) {
+                    [array[i], array[minIndex]] = [array[minIndex], array[i]];
+                    displayArray();
+                }
+                
+                // Mark sorted bar
+                const bars = document.getElementsByClassName('bar');
+                if (bars[i]) bars[i].style.backgroundColor = '#00b894';
+                if (minIndex !== i) await updateBar(minIndex, '#667eea');
+            }
+            
+            const bars = document.getElementsByClassName('bar');
+            if (bars[array.length - 1]) bars[array.length - 1].style.backgroundColor = '#00b894';
+            
+            isSorting = false;
+        }
+
+        // INSERTION SORT
+        async function insertionSort() {
+            if (isSorting) return;
+            isSorting = true;
+            
+            for (let i = 1; i < array.length; i++) {
+                let key = array[i];
+                let j = i - 1;
+                
+                await updateBar(i, '#fdcb6e');
+                
+                while (j >= 0 && array[j] > key) {
+                    await updateBar(j, '#ff6b6b');
+                    array[j + 1] = array[j];
+                    displayArray();
+                    await updateBar(j, '#667eea');
+                    j--;
+                }
+                array[j + 1] = key;
+                displayArray();
+                
+                await updateBar(i, '#667eea');
+                
+                // Mark sorted portion
+                for (let k = 0; k <= i; k++) {
+                    const bars = document.getElementsByClassName('bar');
+                    if (bars[k]) bars[k].style.backgroundColor = '#00b894';
+                }
+            }
+            
+            isSorting = false;
+        }
+
+        // Initialize
+        generateNewArray();
+    </script>
+</body>
+</html>
